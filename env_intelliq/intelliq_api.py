@@ -16,7 +16,7 @@ from flask import Flask, render_template
 #-----------------------------------------------------------------------------
 a=7+3
 c=3
-b=99999
+
 #Create a Flask instance
 app= Flask(__name__)
 
