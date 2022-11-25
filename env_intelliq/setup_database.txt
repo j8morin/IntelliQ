@@ -1,0 +1,69 @@
+/* 
+This is what you can put in you're "database.sql" query to initialize the model we imagine.
+Version control:
+25/11 -Creation of different table with what we understand from the subject V
+      -Insert data into this tables and test the JOIN feature (for the list types) V
+      -Foreign key test (to improve) X
+*/
+
+/*------------------------------------------------------------------------
+Create Tables
+------------------------------------------------------------------------*/
+#users
+CREATE TABLE users (
+    userID INT UNSIGNED PRIMARY KEY AUTO_INCREMENT,
+    username VARCHAR(300) UNIQUE KEY
+);
+
+#questionnaires
+CREATE TABLE questionnaires (
+    questionnaireID VARCHAR(100) PRIMARY KEY NOT NULL,
+    questionnaireTitle VARCHAR(300) NOT NULL,
+    keywordsID INT UNSIGNED NOT NULL,
+    questionsID VARCHAR(100) NOT NULL
+    --foreign key linked to the keywords table
+    --Foreign Key (keywordsID) REFERENCES keywords(keywordID) 
+);
+
+#keywords
+CREATE TABLE keywords (
+    keywordID INT UNSIGNED NOT NULL,
+    keyword VARCHAR(300)
+);
+
+#questions
+CREATE TABLE questions (
+    questionnaireID INT UNSIGNED NOT NULL,
+    qID VARCHAR(100) PRIMARY KEY NOT NULL,
+    qtext VARCHAR(300) NOT NULL,
+    required ENUM('yes','no') NOT NULL,
+    type ENUM('question','profile') NOT NULL,
+    optionsID VARCHAR(100) NOT NULL
+);
+
+#Responses
+CREATE TABLE responses (
+    session VARCHAR(100) NOT NULL,
+    questionnaireID VARCHAR(100) NOT NULL,
+    qID VARCHAR(100) NOT NULL,
+    optID VARCHAR(100) PRIMARY KEY NOT NULL,
+    opttxt VARCHAR(300) NOT NULL,
+    nextqID VARCHAR(100) NOT NULL
+);
+
+/*------------------------------------------------------------------------
+Test de join
+------------------------------------------------------------------------*/
+INSERT INTO questionnaires(questionnaireID,questionnaireTitle,keywordsID,questionsID) VALUES
+('1','Poll1',1,'1');
+INSERT INTO keywords(keywordID,keyword) VALUES (1,'kw1');
+INSERT INTO keywords(keywordID,keyword) VALUES (1,'kw2');
+INSERT INTO keywords(keywordID,keyword) VALUES (2,'kw3');
+
+INSERT INTO users_db(username) VALUES (r8dussau)
+
+SELECT questionnaires.questionnaireID, keywords.keyword FROM keywords JOIN questionnaires ON keywords.keywordsID=questionnaires.questionnaireID;
+
+/*------------------------------------------------------------------------
+FOREIGN KEY CREATION to have automatic JOIN
+------------------------------------------------------------------------*/

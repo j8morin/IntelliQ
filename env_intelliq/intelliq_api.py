@@ -1,3 +1,4 @@
+#pip install flask
 from flask import Flask, render_template, abort
 from werkzeug.exceptions import HTTPException
 
@@ -7,7 +8,7 @@ from wtforms import StringField, SubmitField
 from wtforms.validators import DataRequired
 
 #pip install flask-sqlalchemy
-from flask_sqlalchemy import SQLAlchemy
+#from flask_sqlalchemy import SQLAlchemy
 
 #pip install mysql-connector-python
 import mysql.connector
@@ -27,7 +28,7 @@ from mysql.connector import Error
 #flask --app api run
 #-----------------------------------------------------------------------------
 
-#import connect to db
+#Connect to database
 try:
     connection = mysql.connector.connect(host='localhost',
                                         database='users_db',
@@ -43,12 +44,20 @@ try:
 except Error as e:
     print("Error while connecting to MySQL", e)
 
-
+#-----------------------------------------------------------------------------
 #Create a Flask instance
 app= Flask(__name__)
 
 #Add Secret Key
 app.config['SECRET_KEY'] = "123456" 
+
+#app routage
+'''def index():
+    #abort(500)      #force the error 500
+    #raise no_data() #force the error 402
+    #raise success() #force the error 200
+    return render_template("welcome.html")'''
+#-----------------------------------------------------------------------------
 
 #Create a Form Class
 class NamerForm(FlaskForm):
@@ -57,16 +66,6 @@ class NamerForm(FlaskForm):
     #Create A String
     def __repr__(self):
         return '<Name %r>' % self.name #show the username, we'll delete this function later
-
-
-#Create a route decorator
-#@app.route('/intelliq_api')
-'''def index():
-    #abort(500)      #force the error 500
-    #raise no_data() #force the error 402
-    #raise success() #force the error 200
-    return render_template("welcome.html")'''
-
 
 #Create a Surname Page
 @app.route('/intelliq_api', methods=['GET', 'POST'])
