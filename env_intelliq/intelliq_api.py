@@ -9,6 +9,10 @@ from wtforms.validators import DataRequired
 #pip install flask-sqlalchemy
 from flask_sqlalchemy import SQLAlchemy
 
+#pip install mysql-connector-python
+import mysql.connector
+from mysql.connector import Error
+
 #-----------------------------------------------------------------------------
 #Commande utile dans le powerShell:
 
@@ -23,26 +27,33 @@ from flask_sqlalchemy import SQLAlchemy
 #flask --app api run
 #-----------------------------------------------------------------------------
 
+#import connect to db
+try:
+    connection = mysql.connector.connect(host='localhost',
+                                        database='users_db',
+                                        user='root',
+                                        password='123456')
+    if connection.is_connected():
+        db_Info = connection.get_server_info()
+        print("Connected to MySQL Server version ", db_Info)
+        cursor = connection.cursor()
+        cursor.execute("select database();")
+        record = cursor.fetchone()
+        print("You're connected to database: ", record)
+except Error as e:
+    print("Error while connecting to MySQL", e)
+
+
 #Create a Flask instance
 app= Flask(__name__)
 
-#Add Database 
-#app.config['SQLALCHEMY_DATABASE_URI'] = ""
 #Add Secret Key
 app.config['SECRET_KEY'] = "123456" 
-#Initialize The Database
-#db = SQLAlchemy(app)
-
-#Create Model
-'''class Users(db.Model):
-    id = db.Column(db.Integer, primary_key=True)     #primary_key=True -> unique ID
-    name = db.Column(db.String(200), nullable=False) #nullable=False -> name != "" '''      
 
 #Create a Form Class
 class NamerForm(FlaskForm):
-    name = StringField("What is your username", validators=[DataRequired()])
+    name = StringField("What is your username ?", validators=[DataRequired()])
     submit = SubmitField("Submit")
-
     #Create A String
     def __repr__(self):
         return '<Name %r>' % self.name #show the username, we'll delete this function later
@@ -55,6 +66,8 @@ class NamerForm(FlaskForm):
     #raise no_data() #force the error 402
     #raise success() #force the error 200
     return render_template("welcome.html")'''
+
+
 #Create a Surname Page
 @app.route('/intelliq_api', methods=['GET', 'POST'])
 def user():
@@ -63,7 +76,15 @@ def user():
     #Validate
     if form.validate_on_submit():
         name = form.name.data
-        form.name.data = ''
+        username=[name]
+        form.name.data = '' #vide zone entrée texte
+        cursor.execute("INSERT INTO users(username) VALUES(%s)",username)
+        
+        connection.commit() #make sure data is committed to the database
+
+        cursor.execute("SELECT users.username FROM users") #query operation
+        for username in cursor:
+            print(username)
 
     return render_template("login.html",
         name = name,
