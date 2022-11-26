@@ -1,5 +1,5 @@
 #pip install flask
-from flask import Flask, render_template, abort
+from flask import Flask, render_template, abort, flash
 from werkzeug.exceptions import HTTPException
 
 #pip install flask-wtf
@@ -13,6 +13,8 @@ from wtforms.validators import DataRequired
 #pip install mysql-connector-python
 import mysql.connector
 from mysql.connector import Error
+
+idAdmin = 0
 
 #-----------------------------------------------------------------------------
 #Commande utile dans le powerShell:
@@ -33,7 +35,7 @@ try:
     connection = mysql.connector.connect(host='localhost',
                                         database='intelliq_db',
                                         user='root',
-                                        password='123456') #for Jules cmon9 / for Raph 123456
+                                        password='123456')
     if connection.is_connected():
         db_Info = connection.get_server_info()
         print("Connected to MySQL Server version ", db_Info)
@@ -75,15 +77,31 @@ def user():
     #Validate
     if form.validate_on_submit():
         name = form.name.data
-        newUsername=[name]
+        actualUsername=[name]
         form.name.data = '' #vide zone entrée texte
-        cursor.execute("INSERT INTO users(username) VALUES(%s)",newUsername) #put the new username in the table users
         
-        connection.commit() #make sure data is committed to the database
-
-        cursor.execute("SELECT users.username FROM users") #query operation
+        #Check if username is already in database
+        exist = 0
+        cursor.execute("SELECT username,userID FROM users")
         for username in cursor:
-            print(username)
+            
+            if name==username[0] and exist==0:
+                flash("This username is already used by someone else")
+                exist=1
+            else:
+                flash("This username is valide")
+
+            
+          
+        if exist!=1:
+            cursor.execute("INSERT INTO users(username) VALUES(%s)",actualUsername)
+            connection.commit() #make sure data is committed to the database
+
+        #take the value of userID in function of the usernames
+        cursor.execute("SELECT userID FROM users where username = %s", actualUsername)
+        for userID in cursor:
+            idAdmin = userID[0]
+
 
     return render_template("login.html",
         name = name,
@@ -92,6 +110,7 @@ def user():
 #Create a route 
 @app.route('/admin')
 def admin():
+
 
     return render_template("admin.html")
 
