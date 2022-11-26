@@ -31,9 +31,9 @@ from mysql.connector import Error
 #Connect to database
 try:
     connection = mysql.connector.connect(host='localhost',
-                                        database='users_db',
+                                        database='intelliq_db',
                                         user='root',
-                                        password='123456')
+                                        password='123456') #for Jules cmon9 / for Raph 123456
     if connection.is_connected():
         db_Info = connection.get_server_info()
         print("Connected to MySQL Server version ", db_Info)
@@ -75,9 +75,9 @@ def user():
     #Validate
     if form.validate_on_submit():
         name = form.name.data
-        username=[name]
+        newUsername=[name]
         form.name.data = '' #vide zone entrée texte
-        cursor.execute("INSERT INTO users(username) VALUES(%s)",username)
+        cursor.execute("INSERT INTO users(username) VALUES(%s)",newUsername) #put the new username in the table users
         
         connection.commit() #make sure data is committed to the database
 
@@ -92,6 +92,7 @@ def user():
 #Create a route 
 @app.route('/admin')
 def admin():
+
     return render_template("admin.html")
 
 #Create Custom Error Pages
