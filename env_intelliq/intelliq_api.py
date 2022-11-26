@@ -133,10 +133,7 @@ def handle_200(e):
 app.register_error_handler(success, handle_200)
 
 
-
-
 #Run port 9103 (port_max=25467)
-
 if __name__ == '__main__':
     app.run(debug=True, port=9103) #need 'pip install cryptography' to use 'ssl_context='adhoc''
 
