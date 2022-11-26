@@ -1,5 +1,5 @@
 #pip install flask
-from flask import Flask, render_template, abort
+from flask import Flask, render_template, abort, flash
 from werkzeug.exceptions import HTTPException
 
 #pip install flask-wtf
@@ -31,9 +31,9 @@ from mysql.connector import Error
 #Connect to database
 try:
     connection = mysql.connector.connect(host='localhost',
-                                        database='users_db',
+                                        database='intelliq_db',
                                         user='root',
-                                        password='123456')
+                                        password='cmon9')
     if connection.is_connected():
         db_Info = connection.get_server_info()
         print("Connected to MySQL Server version ", db_Info)
@@ -75,15 +75,23 @@ def user():
     #Validate
     if form.validate_on_submit():
         name = form.name.data
-        username=[name]
+        actualUsername=[name]
         form.name.data = '' #vide zone entrée texte
-        cursor.execute("INSERT INTO users(username) VALUES(%s)",username)
         
-        connection.commit() #make sure data is committed to the database
-
-        cursor.execute("SELECT users.username FROM users") #query operation
+        #Check if username is already in database
+        exist = 0
+        cursor.execute("SELECT username FROM users")
         for username in cursor:
-            print(username)
+            username=username[0]#Conversion du tuple en string
+            if name==username and exist==0:
+                flash("This username is already used by someone else")
+                exist=1
+            else:
+                flash("This username is valide")
+        
+        if exist!=1:
+            cursor.execute("INSERT INTO users(username) VALUES(%s)",actualUsername)
+            connection.commit() #make sure data is committed to the database
 
     return render_template("login.html",
         name = name,
