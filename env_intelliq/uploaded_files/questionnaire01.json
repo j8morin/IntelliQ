@@ -1,6 +1,24 @@
 {
     "questionnaireID": "QQ000",
     "questionnaireTitle": "First test questionnaire",
-    "keywordsID": 1,
-    "questionsID": "Q01"
+    "keywords": [
+		"test",
+		"questionnaire"
+	],
+   "questions": [
+   
+	{
+		"qID ": "P00",
+		"qtext": "Is it working?",
+		"required": "FALSE",
+		"type": "profile",
+		"options": [
+		{
+			"optID": "P00TXT",
+			"opttxt": "<open string>",
+			"nextqID": "P01"
+		}
+		]	
+			
+	}
 }

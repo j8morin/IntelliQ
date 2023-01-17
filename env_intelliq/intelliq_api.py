@@ -161,11 +161,11 @@ def test():
     return render_template("test.html",data = questionnaire_data)
 
 #---------------------------------------------------------------------------------------------------------------
-#Il reste à traiter ce fichier en json pour remplir base de donnée
 class UploadFileForm(FlaskForm):
     file = FileField("File",validators=[InputRequired()])
     submit = SubmitField("Upload File")
 
+#This function read a questionnaire.json file to add everything to the database
 def add_questionnaire_to_db(filename):
     with open(filename,'r') as json_file:
             questionnaire_data = json.load(json_file)
