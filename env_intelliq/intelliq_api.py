@@ -102,6 +102,8 @@ def user():
         for userID in cursor:
             idAdmin = userID[0]
 
+        print(idAdmin)
+
 
     return render_template("login.html",
         name = name,
@@ -110,8 +112,6 @@ def user():
 #Create a route 
 @app.route('/admin')
 def admin():
-
-
     return render_template("admin.html")
 
 #Create Custom Error Pages
