@@ -15,7 +15,6 @@ from werkzeug.utils import secure_filename
 import mysql.connector
 from mysql.connector import Error
 
-idAdmin = 0
 
 import json
 import os
@@ -39,9 +38,9 @@ import os
 #Connect to database
 try:
     connection = mysql.connector.connect(host='localhost',
-                                        database='intelliqdb',
+                                        database='intelliqdb', #j=intelliqdb    r=intelliq_db
                                         user='root',
-                                        password='root')
+                                        password='root') #j=root     r=123456
     if connection.is_connected():
         db_Info = connection.get_server_info()
         print("Connected to MySQL Server version ", db_Info)
@@ -84,6 +83,9 @@ class NamerForm(FlaskForm):
 #Create a Surname Page
 @app.route('/intelliq_api', methods=['GET', 'POST'])
 def user():
+    global actualUser
+    actualUser = ""
+    
     name = None
     form = NamerForm()
     #Validate
@@ -91,7 +93,6 @@ def user():
         name = form.name.data
         actualUsername=[name]
         form.name.data = '' #vide zone entrée texte
-        
         #Check if username is already in database
         exist = 0
         cursor.execute("SELECT username,userID FROM users")
@@ -104,15 +105,15 @@ def user():
                 flash("This username is valide")
 
             
+          
         if exist!=1:
             cursor.execute("INSERT INTO users(username) VALUES(%s)",actualUsername)
             connection.commit() #make sure data is committed to the database
 
         #take the value of userID in function of the usernames
-        cursor.execute("SELECT userID FROM users where username = %s", actualUsername)
-        for userID in cursor:
-            idAdmin = userID[0]
+        #cursor.execute("SELECT userID FROM users where username = %s", actualUsername)
 
+        actualUser = actualUsername
 
     return render_template("login.html",
         name = name,
@@ -198,9 +199,11 @@ def upload_file():
 #Create a route 
 @app.route('/admin')
 def admin():
+    if (actualUser[0] == "raphael") or (actualUser[0] == "jules"):
+        return render_template("admin.html")
+    else:
+        abort(401)
 
-
-    return render_template("admin.html")
 
 
 #---------------------------------------------------------------------------------------------------------------
