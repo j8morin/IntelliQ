@@ -1,11 +1,12 @@
 #pip install flask
-from flask import Flask, render_template, abort, flash
+from flask import Flask, render_template, abort, flash, request, redirect, url_for
 from werkzeug.exceptions import HTTPException
 
 #pip install flask-wtf
 from flask_wtf import FlaskForm
-from wtforms import StringField, SubmitField
-from wtforms.validators import DataRequired
+from wtforms import StringField, SubmitField, FileField
+from wtforms.validators import DataRequired, InputRequired
+from werkzeug.utils import secure_filename
 
 #pip install flask-sqlalchemy
 #from flask_sqlalchemy import SQLAlchemy
@@ -16,11 +17,16 @@ from mysql.connector import Error
 
 idAdmin = 0
 
+import json
+import os
+
+
+
 #-----------------------------------------------------------------------------
 #Commande utile dans le powerShell:
 
 #Aciver l'environnement virtuel:
-#intelliq\Scripts\activate
+#env_intelliq\Scripts\activate
 
 #set flask app for the environnement: (nécessite surement un redémarrage)
 #setx FLASK_APP "api.py"
@@ -33,9 +39,9 @@ idAdmin = 0
 #Connect to database
 try:
     connection = mysql.connector.connect(host='localhost',
-                                        database='intelliq_db',
+                                        database='intelliqdb',
                                         user='root',
-                                        password='123456')
+                                        password='root')
     if connection.is_connected():
         db_Info = connection.get_server_info()
         print("Connected to MySQL Server version ", db_Info)
@@ -47,11 +53,17 @@ except Error as e:
     print("Error while connecting to MySQL", e)
 
 #-----------------------------------------------------------------------------
+#Setting up flask app
+
+UPLOAD_FOLDER = 'uploaded_files'
+ALLOWED_EXTENSIONS = {'json'}
+
 #Create a Flask instance
 app= Flask(__name__)
 
 #Add Secret Key
 app.config['SECRET_KEY'] = "123456" 
+app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 
 #app routage
 '''def index():
@@ -109,13 +121,91 @@ def user():
         name = name,
         form = form)
 
+
+#---------------------------------------------------------------------------------------------------------------
+#route for the healthcheck:
+# a JSON object: {"status":"OK", "dbconnection":[connection string]}
+# is returned, otherwise {"status":"failed", "dbconnection":[connection string]} is returned. The
+# connection string contains the necessary information required for the DB of your choice.
+@app.route('/healthcheck')
+#Healthcheck
+def healthcheck():
+    #Connect to database
+    try:
+        connection = mysql.connector.connect(host='localhost',
+                                            database='intelliqdb',
+                                            user='root',
+                                            password='root')
+        if connection.is_connected():
+            db_Info = connection.get_server_info()
+            data = {'status':'OK','dbconnection':db_Info}
+            json_data = json.dumps(data)
+            cursor = connection.cursor()
+            cursor.execute("select database();")
+            print(json_data)
+    except:
+        #print("Error while connecting to MySQL", e)
+        db_Info = connection.get_server_info()
+        data = {'status':'failed','dbconnection':db_Info}
+        json_data=json.dumps(data)
+        print(json_data)
+    
+    #a changer plus tard pour faire apparaitre le json object
+    return render_template("healthcheck.html",
+        json_data = json_data)
+#---------------------------------------------------------------------------------------------------------------
+#test
+@app.route('/test',methods=['GET', 'POST'])
+def test():
+    with open('env_intelliq/questionnaire01.json','r') as f:
+            questionnaire_data = json.load(f)
+        # do something with questionnaire_data
+    return render_template("test.html",data = questionnaire_data)
+
+#---------------------------------------------------------------------------------------------------------------
+#Il reste à traiter ce fichier en json pour remplir base de donnée
+class UploadFileForm(FlaskForm):
+    file = FileField("File",validators=[InputRequired()])
+    submit = SubmitField("Upload File")
+
+def add_questionnaire_to_db(filename):
+    with open(filename,'r') as json_file:
+            questionnaire_data = json.load(json_file)
+            qID=questionnaire_data['questionnaireID']
+            qTitle=questionnaire_data['questionnaireTitle']
+            qKeywordsID=questionnaire_data['keywordsID']
+            qQuestionsID=questionnaire_data['questionsID']
+            print(qID,qTitle)
+    if connection.is_connected():
+        cursor.execute("INSERT INTO questionnaires(questionnaireID,questionnaireTitle,keywordsID,questionsID) VALUES(%s,%s,%s,%s)",(qID,qTitle,qKeywordsID,qQuestionsID))
+        connection.commit() #make sure data is committed to the database
+
+@app.route('/questionnaire_upd',methods=['GET', 'POST'])
+def upload_file():
+    check=""
+    form = UploadFileForm()
+    if form.validate_on_submit():
+        file = form.file.data #Grab the file
+        file.save(os.path.join(os.path.abspath(os.path.dirname(__file__)),app.config['UPLOAD_FOLDER'],secure_filename(file.filename))) #Save the file
+        #Open the file to fill the database
+        filename="env_intelliq/uploaded_files/"+file.filename
+        add_questionnaire_to_db(filename)
+       
+        check = "File has been uploaded"
+    else:
+        check = ""
+    return render_template("questionnaire_upd.html",form=form, check=check)
+
+
+#---------------------------------------------------------------------------------------------------------------
 #Create a route 
 @app.route('/admin')
 def admin():
     return render_template("admin.html")
 
-#Create Custom Error Pages
 
+#---------------------------------------------------------------------------------------------------------------
+#Create Custom Error Pages
 #back-end error
 @app.errorhandler(500)#: impossible to run with ':'
 def internal_server(e):
