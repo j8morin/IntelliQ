@@ -1,0 +1,13 @@
+<h1>Questionnaire upload page</h1>
+
+<form method="POST" enctype="multipart/form-data">
+    {{form.hidden_tag()}}
+     {{form.file()}}
+    {{form.submit()}}
+</form>
+
+{% if check %}
+    <p>{{check}}</p>
+{% else %}
+    <p>Waiting for an action</p>
+{% endif %}
