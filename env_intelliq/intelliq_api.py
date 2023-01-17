@@ -104,7 +104,6 @@ def user():
                 flash("This username is valide")
 
             
-          
         if exist!=1:
             cursor.execute("INSERT INTO users(username) VALUES(%s)",actualUsername)
             connection.commit() #make sure data is committed to the database
