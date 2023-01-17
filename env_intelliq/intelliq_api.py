@@ -15,6 +15,8 @@ from werkzeug.utils import secure_filename
 import mysql.connector
 from mysql.connector import Error
 
+idAdmin = 0
+
 import json
 import os
 
@@ -92,18 +94,26 @@ def user():
         
         #Check if username is already in database
         exist = 0
-        cursor.execute("SELECT username FROM users")
+        cursor.execute("SELECT username,userID FROM users")
         for username in cursor:
-            username=username[0]#Conversion du tuple en string
-            if name==username and exist==0:
+            
+            if name==username[0] and exist==0:
                 flash("This username is already used by someone else")
                 exist=1
             else:
                 flash("This username is valide")
-        
+
+            
+          
         if exist!=1:
             cursor.execute("INSERT INTO users(username) VALUES(%s)",actualUsername)
             connection.commit() #make sure data is committed to the database
+
+        #take the value of userID in function of the usernames
+        cursor.execute("SELECT userID FROM users where username = %s", actualUsername)
+        for userID in cursor:
+            idAdmin = userID[0]
+
 
     return render_template("login.html",
         name = name,
@@ -189,6 +199,8 @@ def upload_file():
 #Create a route 
 @app.route('/admin')
 def admin():
+
+
     return render_template("admin.html")
 
 
