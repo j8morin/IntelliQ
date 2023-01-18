@@ -7,6 +7,8 @@ Version control:
 26/11 -Foreign key V
 */
 
+USE intelliq_db;
+
 /*------------------------------------------------------------------------
 Create Tables
 ------------------------------------------------------------------------*/
@@ -18,44 +20,75 @@ CREATE TABLE users (
 
 #questionnaires
 CREATE TABLE questionnaires (
-    questionnaireID CHAR(10) PRIMARY KEY NOT NULL,
-    questionnaireTitle CHAR(255) NOT NULL,
-    keywordsID INT UNSIGNED NOT NULL,
-    questionsID CHAR(100) NOT NULL
+    questionnaireID CHAR(10) PRIMARY KEY,
+    questionnaireTitle CHAR(255) NOT NULL
 );
 
 #keywords
 CREATE TABLE keywords (
-    keywordID INT UNSIGNED PRIMARY KEY AUTO_INCREMENT,
-    keyword CHAR(30),
-    --ForeignKey
-    questionnaireID CHAR(10) NOT NULL
+    keyword CHAR(255) PRIMARY KEY
 );
 
 #questions
 CREATE TABLE questions (
-    qID CHAR(10) PRIMARY KEY NOT NULL,
+    qID CHAR(10) PRIMARY KEY,
     qtext CHAR(255) NOT NULL,
     required ENUM('yes','no') NOT NULL,
-    type ENUM('question','profile') NOT NULL,
-    --ForeignKey
-    questionnaireID CHAR(10) NOT NULL
+    type ENUM('question','profile') NOT NULL
 );
 
-#Responses
-CREATE TABLE responses (
-    session CHAR(4) NOT NULL,
-    questionnaireID CHAR(10) NOT NULL,
-    optID CHAR(10) PRIMARY KEY NOT NULL,
+#options
+CREATE TABLE options (
+    optID CHAR(10) PRIMARY KEY,
     opttxt CHAR(100) NOT NULL,
-    nextqID CHAR(10) NOT NULL,
-    --ForeignKey
-    qID CHAR(10) NOT NULL
+    nextqID CHAR(10) NOT NULL
 );
 
+#junction table between questionnaires and keywords
+CREATE TABLE questionnaires_keywords (
+    questionnaireID CHAR(10) NOT NULL,
+    keyword CHAR(255) NOT NULL,
+    PRIMARY KEY (questionnaireID,keyword),
+    FOREIGN KEY (questionnaireID) REFERENCES questionnaires(questionnaireID),
+    FOREIGN KEY (keyword) REFERENCES keywords(keyword)
+);
+
+#junction table between questionaires and questions
+CREATE TABLE questionnaires_questions (
+    questionnaireID CHAR(255) NOT NULL,
+    qID CHAR(10) NOT NULL,
+    PRIMARY KEY (questionnaireID, qID),
+    FOREIGN KEY (questionnaireID) REFERENCES questionnaires(questionnaireID),
+    FOREIGN KEY (qID) REFERENCES questions(qID)
+);
+
+#junction table between questions and options
+CREATE TABLE questions_options (
+    qID CHAR(10) NOT NULL,
+    optID CHAR(10) NOT NULL,
+    PRIMARY KEY (qID, optID),
+    FOREIGN KEY (qID) REFERENCES questions(qID),
+    FOREIGN KEY (optID) REFERENCES options(optID)
+);
 /*------------------------------------------------------------------------
-FOREIGN KEY CREATION to have automatic JOIN
+TEST ZONE (query)
 ------------------------------------------------------------------------*/
-ALTER TABLE keywords ADD CONSTRAINT FOREIGN KEY (questionnaireID) REFERENCES questionnaires(questionnaireID);
-ALTER TABLE questions ADD CONSTRAINT FOREIGN KEY (questionnaireID) REFERENCES questionnaires(questionnaireID);
-ALTER TABLE responses ADD CONSTRAINT FOREIGN KEY (qID) REFERENCES questions(qID);
+INSERT INTO questionnaires (`questionnaireID`,`questionnaireTitle`)
+VALUE ('QQ000','My first questionnaire');
+
+INSERT INTO keywords (keyword)
+VALUEs ('first'),('questionnaire');
+
+INSERT INTO questionnaires_keywords (`questionnaireID`,keyword)
+VALUES ('QQ000','first'),('QQ000','questionnaire');
+
+SELECT * FROM questionnaires WHERE questionnaireID = 'QQ000';
+SELECT * FROM keywords WHERE keyword = 'first' OR keyword = 'questionnaire';
+
+SELECT * FROM questionnaires_keywords;
+
+SELECT DISTINCT questionnaires.questionnaireID, keywords.keyword
+FROM questionnaires_keywords
+JOIN questionnaires on questionnaires_keywords.`questionnaireID` = questionnaires.questionnaireID
+JOIN keywords on questionnaires_keywords.keyword = keywords.keyword;
+
