@@ -38,9 +38,9 @@ actualUser = ""
 #Connect to database
 try:
     connection = mysql.connector.connect(host='localhost',
-                                        database='intelliqdb', #j=intelliqdb    r=intelliq_db
+                                        database='intelliq_db', #j=intelliqdb    r=intelliq_db
                                         user='root',
-                                        password='root') #j=root     r=123456
+                                        password='123456') #j=root     r=123456
     if connection.is_connected():
         db_Info = connection.get_server_info()
         print("Connected to MySQL Server version ", db_Info)
@@ -124,32 +124,35 @@ def user():
 # a JSON object: {"status":"OK", "dbconnection":[connection string]}
 # is returned, otherwise {"status":"failed", "dbconnection":[connection string]} is returned. The
 # connection string contains the necessary information required for the DB of your choice.
-@app.route('/admin/healthcheck')
+@app.route('/intelliq_api/admin/healthcheck')
 #Healthcheck
 def healthcheck():
+    if (actualUser[0] == "raphael") or (actualUser[0] == "jules"):
     #Connect to database
-    try:
-        connection = mysql.connector.connect(host='localhost',
-                                            database='intelliqdb',
-                                            user='root',
-                                            password='root')
-        if connection.is_connected():
+        try:
+            connection = mysql.connector.connect(host='localhost',
+                                                database='intelliq_db',
+                                                user='root',
+                                                password='123456')
+            if connection.is_connected():
+                db_Info = connection.get_server_info()
+                data = {'status':'OK','dbconnection':db_Info}
+                json_data = json.dumps(data)
+                cursor = connection.cursor()
+                cursor.execute("select database();")
+                print(json_data)
+        except:
+            #print("Error while connecting to MySQL", e)
             db_Info = connection.get_server_info()
-            data = {'status':'OK','dbconnection':db_Info}
-            json_data = json.dumps(data)
-            cursor = connection.cursor()
-            cursor.execute("select database();")
+            data = {'status':'failed','dbconnection':db_Info}
+            json_data=json.dumps(data)
             print(json_data)
-    except:
-        #print("Error while connecting to MySQL", e)
-        db_Info = connection.get_server_info()
-        data = {'status':'failed','dbconnection':db_Info}
-        json_data=json.dumps(data)
-        print(json_data)
-    
-    #a changer plus tard pour faire apparaitre le json object
-    return render_template("healthcheck.html",
-        json_data = json_data)
+        
+        #a changer plus tard pour faire apparaitre le json object
+        return render_template("healthcheck.html",
+            json_data = json_data)
+    else:
+        abort(401)
 #---------------------------------------------------------------------------------------------------------------
 #test
 @app.route('/test',methods=['GET', 'POST'])
@@ -177,26 +180,29 @@ def add_questionnaire_to_db(filename):
         cursor.execute("INSERT INTO questionnaires(questionnaireID,questionnaireTitle,keywordsID,questionsID) VALUES(%s,%s,%s,%s)",(qID,qTitle,qKeywordsID,qQuestionsID))
         connection.commit() #make sure data is committed to the database
 
-@app.route('/questionnaire_upd',methods=['GET', 'POST'])
+@app.route('/intelliq_api/admin/questionnaire_upd',methods=['GET', 'POST'])
 def upload_file():
-    check=""
-    form = UploadFileForm()
-    if form.validate_on_submit():
-        file = form.file.data #Grab the file
-        file.save(os.path.join(os.path.abspath(os.path.dirname(__file__)),app.config['UPLOAD_FOLDER'],secure_filename(file.filename))) #Save the file
-        #Open the file to fill the database
-        filename="env_intelliq/uploaded_files/"+file.filename
-        add_questionnaire_to_db(filename)
-       
-        check = "File has been uploaded"
+    if (actualUser[0] == "raphael") or (actualUser[0] == "jules"):
+        check=""
+        form = UploadFileForm()
+        if form.validate_on_submit():
+            file = form.file.data #Grab the file
+            file.save(os.path.join(os.path.abspath(os.path.dirname(__file__)),app.config['UPLOAD_FOLDER'],secure_filename(file.filename))) #Save the file
+            #Open the file to fill the database
+            filename="env_intelliq/uploaded_files/"+file.filename
+            add_questionnaire_to_db(filename)
+        
+            check = "File has been uploaded"
+        else:
+            check = ""
+        return render_template("questionnaire_upd.html",form=form, check=check)
     else:
-        check = ""
-    return render_template("questionnaire_upd.html",form=form, check=check)
+        abort(401)
 
 
 #---------------------------------------------------------------------------------------------------------------
 #Create a route 
-@app.route('/admin')
+@app.route('/intelliq_api/admin')
 def admin():
     if (actualUser[0] == "raphael") or (actualUser[0] == "jules"):
         return render_template("admin.html")
