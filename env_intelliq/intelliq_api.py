@@ -42,7 +42,7 @@ try:
     connection = mysql.connector.connect(host='localhost',
                                         database='intelliq_db', #j=intelliqdb    r=intelliq_db
                                         user='root',
-                                        password='123456') #j=root     r=123456
+                                        password='root') #j=root     r=123456
     if connection.is_connected():
         db_Info = connection.get_server_info()
         print("Connected to MySQL Server version ", db_Info)
@@ -73,7 +73,7 @@ app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
     #raise success() #force the error 200
     return render_template("welcome.html")'''
 #-----------------------------------------------------------------------------
-
+#User
 #Create a Form Class
 class NamerForm(FlaskForm):
     name = StringField("What is your username ?", validators=[DataRequired()])
@@ -230,24 +230,65 @@ def test():
     return render_template("test.html",data = questionnaire_data)
 
 #---------------------------------------------------------------------------------------------------------------
+# Admnistrative endpoint questionnaire_upd
+#---------------------------------------------------------------------------------------------------------------
 class UploadFileForm(FlaskForm):
     file = FileField("File",validators=[InputRequired()])
     submit = SubmitField("Upload File")
 
-#This function read a questionnaire.json file to add everything to the database
+#This function read a questionnaire.json file from the questionnaire repository to add everything to the database
 def add_questionnaire_to_db(filename):
     with open(filename,'r') as json_file:
-            questionnaire_data = json.load(json_file)
-            qID=questionnaire_data['questionnaireID']
-            qTitle=questionnaire_data['questionnaireTitle']
-            qKeywordsID=questionnaire_data['keywordsID']
-            qQuestionsID=questionnaire_data['questionsID']
-            print(qID,qTitle)
+            data = json.load(json_file)
     if connection.is_connected():
-        cursor.execute("INSERT INTO questionnaires(questionnaireID,questionnaireTitle,keywordsID,questionsID) VALUES(%s,%s,%s,%s)",(qID,qTitle,qKeywordsID,qQuestionsID))
-        connection.commit() #make sure data is committed to the database
+        #questionnaires:
+        questionnaireID = data['questionnaireID']
+        questionnaireTitle = data['questionnaireTitle']
+        questions = data['questions']
+        cursor.execute("INSERT INTO questionnaires(questionnaireID,questionnaireTitle) VALUES(%s,%s)",(questionnaireID,questionnaireTitle))
+
+        #keywords:
+        keywords = data['keywords']
+        for keyword in keywords:
+            #insert into keywords table
+            cursor.execute("INSERT INTO keywords(keyword) VALUES(%s)",([keyword]))
+            #insert into junction table
+            cursor.execute("INSERT INTO questionnaires_keywords (questionnaireID,keyword)"
+                            "VALUES (%s,%s)",(questionnaireID,keyword))
+
+        #questions:
+        questions = data['questions']
+        for question in questions:
+            qID = question['qID']
+            qtext = question['qtext']
+            required = question['required']
+            type = question['type']
+            #insert into questions table
+            cursor.execute("INSERT INTO questions(qID,qtext,required,type)"
+                            "VALUES (%s,%s,%s,%s)",(qID,qtext,required,type))
+            #insert into junction table
+            cursor.execute("INSERT INTO questionnaires_questions (questionnaireID,qID)"
+                            "VALUES (%s,%s)",(questionnaireID,qID))
+
+            #options
+            options = question['options']
+            for option in options:
+                optID = option['optID']
+                opttxt = option['opttxt']
+                nextqID = option['nextqID']
+                #insert into options table
+                cursor.execute("INSERT INTO options(optID,opttxt,nextqID)"
+                                "VALUES (%s,%s,%s)",(optID,opttxt,nextqID))
+                #insert into junction table
+                cursor.execute("INSERT INTO questions_options (qID,optID)"
+                                "VALUES (%s,%s)",(qID,optID))
+            
+        #connection
+        connection.commit()
 
 @app.route('/intelliq_api/admin/questionnaire_upd',methods=['GET', 'POST'])
+
+#Upload the selected file in the questionnaire repository
 def upload_file():
     if (actualUser[0] == "raphael") or (actualUser[0] == "jules"):
         check=""
@@ -265,10 +306,6 @@ def upload_file():
         return render_template("questionnaire_upd.html",form=form, check=check)
     else:
         abort(401)
-
-
-
-
 #---------------------------------------------------------------------------------------------------------------
 #Create Custom Error Pages
 #back-end error

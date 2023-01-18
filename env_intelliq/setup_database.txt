@@ -33,7 +33,7 @@ CREATE TABLE keywords (
 CREATE TABLE questions (
     qID CHAR(10) PRIMARY KEY,
     qtext CHAR(255) NOT NULL,
-    required ENUM('yes','no') NOT NULL,
+    required ENUM('true','false') NOT NULL,
     type ENUM('question','profile') NOT NULL
 );
 
