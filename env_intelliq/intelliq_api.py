@@ -20,8 +20,6 @@ import json
 import os
 import glob #get file in a folder
 
-actualUser = " "
-nameTable = ["users", "questionnaires", "questions", "options", "keywords", "questionnaires_keywords", "questionnaires_questions", "questions_options" ]
 
 #-----------------------------------------------------------------------------
 #Commande utile dans le powerShell:
@@ -58,6 +56,9 @@ except Error as e:
 
 UPLOAD_FOLDER = 'uploaded_files'
 ALLOWED_EXTENSIONS = {'json'}
+
+actualUser = " "
+nameTable = ["users", "questionnaires", "questions", "options", "keywords", "questionnaires_keywords", "questionnaires_questions", "questions_options" ]
 
 #Create a Flask instance
 app= Flask(__name__)
@@ -195,13 +196,10 @@ def reset_all():
                 result += nb_column[0]
 
             #remove all the json files in the folder
-            folder_path = r"C:\Users\dussa\Documents\Ecole\ENIB\Mobilite_Internationale\Courses\Software_Engineering\IntelliQ\env_intelliq\uploaded_files/" 
-            #raph_path : r"C:\Users\dussa\Documents\Ecole\ENIB\Mobilite_Internationale\Courses\Software_Engineering\IntelliQ\env_intelliq\uploaded_files/"
-            #jules_path : 
-            json_files = glob.glob(folder_path + '*.json')
+            folder_path = os.path.join(os.path.abspath(os.path.dirname(__file__)),app.config['UPLOAD_FOLDER'])
+            json_files = glob.glob(folder_path + "/" + '*.json')
             for file in json_files:
                 os.remove(file)
-
 
             if not os.listdir(folder_path) and (result == 0): #if the folder "uploaded_files" is empty and if there is nothing inside all the tables
                 data = {'status':'OK'}
@@ -268,16 +266,45 @@ def upload_file():
 
 #---------------------------------------------------------------------------------------------------------------
 
+#System Operating Endpoint of the a 
 
-@app.route('/intelliq_api/questionnaire', methods=['GET'])
-def questionnaire():
+@app.route('/intelliq_api/questionnaire/<questionnaireID>', methods=['GET'])
+def questionnaire(questionnaireID):
 
-    data = {'test':'ok'}
+    #take the JSON file of the questionnaireID that you have chosen
+    with open(f'env_intelliq/{questionnaireID}.json','r') as f:
+            data = json.load(f)
     json_data = json.dumps(data)
 
     return render_template("questionnaire.html",
+            questionnaireID = questionnaireID,
             json_data = json_data)
 
+#---------------------------------------------------------------------------------------------------------------
+
+#System Operating Endpoint of the b
+
+@app.route('/intelliq_api/question/<questionnaireID>/<questionID>', methods=['GET'])
+def question(questionnaireID, questionID):
+
+    with open(f'env_intelliq/{questionnaireID}.json','r') as f:
+            data = json.load(f)
+
+    #take the part of the JSON file for the questionID that you have chosen
+    question = data['questions']
+    for i in range(len(question)):
+        if list(question[i].values())[0] == questionID:
+            data_q = question[i]
+    json_data = json.dumps(data_q)
+
+    return render_template("questionnaire.html",
+            questionnaireID = questionnaireID,
+            questionID = questionID,
+            json_data = json_data)
+
+#---------------------------------------------------------------------------------------------------------------
+
+#System Operating Endpoint of the c
 
 #---------------------------------------------------------------------------------------------------------------
 #Create Custom Error Pages
