@@ -18,8 +18,10 @@ from mysql.connector import Error
 
 import json
 import os
+import glob #get file in a folder
 
-actualUser = ""
+actualUser = " "
+nameTable = ["users", "questionnaires", "questions", "responses" ]
 
 #-----------------------------------------------------------------------------
 #Commande utile dans le powerShell:
@@ -118,13 +120,22 @@ def user():
         name = name,
         form = form)
 
+#---------------------------------------------------------------------------------------------------------------
+#route for the adminPage
+@app.route('/intelliq_api/admin')
+def admin():
+    if (actualUser[0] == "raphael") or (actualUser[0] == "jules"):
+        return render_template("admin.html")
+    else:
+        abort(401)
+
 
 #---------------------------------------------------------------------------------------------------------------
 #route for the healthcheck:
 # a JSON object: {"status":"OK", "dbconnection":[connection string]}
 # is returned, otherwise {"status":"failed", "dbconnection":[connection string]} is returned. The
 # connection string contains the necessary information required for the DB of your choice.
-@app.route('/intelliq_api/admin/healthcheck')
+@app.route('/intelliq_api/admin/healthcheck', methods=['GET'])
 #Healthcheck
 def healthcheck():
     if (actualUser[0] == "raphael") or (actualUser[0] == "jules"):
@@ -153,6 +164,62 @@ def healthcheck():
             json_data = json_data)
     else:
         abort(401)
+
+#---------------------------------------------------------------------------------------------------------------
+
+@app.route('/intelliq_api/admin/resetall')
+def reset_all():
+    if (actualUser[0] == "raphael") or (actualUser[0] == "jules"):
+
+        result = 0
+        
+        connection = mysql.connector.connect(host='localhost',
+                                            database='intelliq_db',
+                                            user='root',
+                                            password='123456')
+        if connection.is_connected():
+            cursor = connection.cursor()
+
+            #make all the tables empty
+            for table_name in nameTable:
+                query = "DELETE FROM {}".format(table_name)
+                cursor.execute(query)
+                connection.commit()
+                
+            #check if the tables are empty    
+            for table_name in nameTable:
+                query =  "SELECT COUNT(*) FROM {}".format(table_name)
+                cursor.execute(query)
+                
+                nb_column = cursor.fetchone()
+                result += nb_column[0]
+
+            #remove all the json files in the folder
+            folder_path = r"C:\Users\dussa\Documents\Ecole\ENIB\Mobilite_Internationale\Courses\Software_Engineering\IntelliQ\env_intelliq\uploaded_files/" 
+            #raph_path : r"C:\Users\dussa\Documents\Ecole\ENIB\Mobilite_Internationale\Courses\Software_Engineering\IntelliQ\env_intelliq\uploaded_files/"
+            #jules_path : 
+            json_files = glob.glob(folder_path + '*.json')
+            for file in json_files:
+                os.remove(file)
+
+
+            if not os.listdir(folder_path) and (result == 0): 
+                data = {'status':'OK'}
+            elif not os.listdir(folder_path) and (result != 0):
+                data = {'status': 'failed', 'reason':'<All the tables are not empty>'}
+            elif os.listdir(folder_path) and (result == 0):
+                data = {'status': 'failed', 'reason':'<The folder of JSON files is not empty>'}
+            else:
+                data = {'status': 'failed', 'reason':'<All the tables are not empty AND The folder of JSON files is not empty>'}
+
+            json_data = json.dumps(data)
+            
+        return render_template("reset_all.html",
+            json_data = json_data)
+    else:
+        abort(401)
+
+
 #---------------------------------------------------------------------------------------------------------------
 #test
 @app.route('/test',methods=['GET', 'POST'])
@@ -199,15 +266,6 @@ def upload_file():
     else:
         abort(401)
 
-
-#---------------------------------------------------------------------------------------------------------------
-#Create a route 
-@app.route('/intelliq_api/admin')
-def admin():
-    if (actualUser[0] == "raphael") or (actualUser[0] == "jules"):
-        return render_template("admin.html")
-    else:
-        abort(401)
 
 
 
