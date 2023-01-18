@@ -1,6 +1,57 @@
 {
-    "questionnaireID": "QQ000",
-    "questionnaireTitle": "First test questionnaire",
-    "keywordsID": 1,
-    "questionsID": "Q01"
+    "questionnaireID":"QQ000",
+    "questionnaireTitle":"My first research questionnaire",
+    "keywords": [
+        "footbal",
+        "islands",
+        "timezone"
+    ],
+    "questions": [
+        {
+            "qID": "P00",
+            "qtext": "What is you mail adress?",
+            "required": "false",
+            "type": "profile",
+            "options": [
+                {
+                    "optID": "P00TXT",
+                    "opttxt": "<open string>",
+                    "nextqID": "P01"
+                }
+            ]
+        },
+        {
+            "qID": "P01",
+            "qtext": "What is your age?",
+            "required": "true",
+            "type": "profile",
+            "options": [
+                {
+                    "optID": "P01A1",
+                    "opttxt": "<30",
+                    "nextqID": "Q01"
+                },
+                {
+                    "optID": "P01A1",
+                    "opttxt": "<30",
+                    "nextqID": "Q01"
+                },
+                {
+                    "optID": "P01A1",
+                    "opttxt": "<30",
+                    "nextqID": "Q01"
+                },
+                {
+                    "optID": "P01A1",
+                    "opttxt": "<30",
+                    "nextqID": "Q01"
+                },
+                {
+                    "optID": "P01A1",
+                    "opttxt": "<30",
+                    "nextqID": "Q01"
+                }
+            ]
+        }
+    ]
 }
