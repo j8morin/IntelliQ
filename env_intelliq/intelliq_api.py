@@ -19,7 +19,7 @@ from mysql.connector import Error
 import json
 import os
 
-
+actualUser = ""
 
 #-----------------------------------------------------------------------------
 #Commande utile dans le powerShell:
@@ -84,7 +84,6 @@ class NamerForm(FlaskForm):
 @app.route('/intelliq_api', methods=['GET', 'POST'])
 def user():
     global actualUser
-    actualUser = ""
     
     name = None
     form = NamerForm()
@@ -123,7 +122,7 @@ def user():
 # a JSON object: {"status":"OK", "dbconnection":[connection string]}
 # is returned, otherwise {"status":"failed", "dbconnection":[connection string]} is returned. The
 # connection string contains the necessary information required for the DB of your choice.
-@app.route('/healthcheck')
+@app.route('/admin/healthcheck')
 #Healthcheck
 def healthcheck():
     #Connect to database
