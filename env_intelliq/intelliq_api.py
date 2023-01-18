@@ -346,6 +346,16 @@ def question(questionnaireID, questionID):
 #---------------------------------------------------------------------------------------------------------------
 
 #System Operating Endpoint of the c
+@app.route('/intelliq_api/doanswer/<questionnaireID>/<questionID>/<session>/<optionID>',methods=['POST'])
+def doanswer(questionnaireID, questionID, session, optionID):
+
+
+    return render_template("doanswer.html",
+            questionnaireID = questionnaireID,
+            questionID = questionID,
+            session = session,
+            optionID = optionID)
+
 
 #---------------------------------------------------------------------------------------------------------------
 #Create Custom Error Pages
