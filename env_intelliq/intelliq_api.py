@@ -38,9 +38,9 @@ actualUser = ""
 #Connect to database
 try:
     connection = mysql.connector.connect(host='localhost',
-                                        database='intelliq_db', #j=intelliqdb    r=intelliq_db
+                                        database='intelliqdb', #j=intelliqdb    r=intelliq_db
                                         user='root',
-                                        password='123456') #j=root     r=123456
+                                        password='root') #j=root     r=123456
     if connection.is_connected():
         db_Info = connection.get_server_info()
         print("Connected to MySQL Server version ", db_Info)
@@ -102,6 +102,8 @@ def user():
                 exist=1
             else:
                 flash("This username is valide")
+
+            
           
         if exist!=1:
             cursor.execute("INSERT INTO users(username) VALUES(%s)",actualUsername)
@@ -158,11 +160,11 @@ def test():
     return render_template("test.html",data = questionnaire_data)
 
 #---------------------------------------------------------------------------------------------------------------
-#Il reste à traiter ce fichier en json pour remplir base de donnée
 class UploadFileForm(FlaskForm):
     file = FileField("File",validators=[InputRequired()])
     submit = SubmitField("Upload File")
 
+#This function read a questionnaire.json file to add everything to the database
 def add_questionnaire_to_db(filename):
     with open(filename,'r') as json_file:
             questionnaire_data = json.load(json_file)
