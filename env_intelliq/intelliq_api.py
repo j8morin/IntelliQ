@@ -21,7 +21,7 @@ import os
 import glob #get file in a folder
 
 actualUser = " "
-nameTable = ["users", "questionnaires", "questions", "responses" ]
+nameTable = ["users", "questionnaires", "questions", "options", "keywords", "questionnaires_keywords", "questionnaires_questions", "questions_options" ]
 
 #-----------------------------------------------------------------------------
 #Commande utile dans le powerShell:
@@ -203,13 +203,13 @@ def reset_all():
                 os.remove(file)
 
 
-            if not os.listdir(folder_path) and (result == 0): 
+            if not os.listdir(folder_path) and (result == 0): #if the folder "uploaded_files" is empty and if there is nothing inside all the tables
                 data = {'status':'OK'}
-            elif not os.listdir(folder_path) and (result != 0):
+            elif not os.listdir(folder_path) and (result != 0): #if the folder is empty and one of the tables is not empty
                 data = {'status': 'failed', 'reason':'<All the tables are not empty>'}
-            elif os.listdir(folder_path) and (result == 0):
-                data = {'status': 'failed', 'reason':'<The folder of JSON files is not empty>'}
-            else:
+            elif os.listdir(folder_path) and (result == 0): #if the folder is not empty and the tables are empty
+                data = {'status': 'failed', 'reason':'<The folder of JSON files is not empty>'} 
+            else: #if the folder is not empyt and one of the tables is not empty
                 data = {'status': 'failed', 'reason':'<All the tables are not empty AND The folder of JSON files is not empty>'}
 
             json_data = json.dumps(data)
@@ -266,7 +266,17 @@ def upload_file():
     else:
         abort(401)
 
+#---------------------------------------------------------------------------------------------------------------
 
+
+@app.route('/intelliq_api/questionnaire', methods=['GET'])
+def questionnaire():
+
+    data = {'test':'ok'}
+    json_data = json.dumps(data)
+
+    return render_template("questionnaire.html",
+            json_data = json_data)
 
 
 #---------------------------------------------------------------------------------------------------------------
