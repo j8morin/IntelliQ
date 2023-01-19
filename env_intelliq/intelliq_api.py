@@ -397,8 +397,6 @@ def get_session_answers(questionnaireID,session):
             data["answers"].append({"qID" : results[result][0],"ans" : results[result][1]}) 
         data["answers"] = sorted(data["answers"], key=lambda x: x["qID"])
         
-        
-
     else:
         data = {'empty' : 'empty'}
         print("not connected")
@@ -412,15 +410,32 @@ def get_session_answers(questionnaireID,session):
 #e. {baseURL}/getquestionanswers/:questionnaireID/:questionID
 @app.route('/intelliq_api/getquestionanswers/<questionnaireID>/<questionID>',methods=['GET'])
 def get_question_answers(questionnaireID,questionID):
+
+
     if connection.is_connected():
         print ("Connected!")
-        cursor.execute("SELECT * FROM answers WHERE answers.questionnaireID = %s AND answers.qID = %s",(questionnaireID,questionID)) 
-        result = cursor.fetchall()
-        print(result)
+        cursor.execute("SELECT session,ans FROM answers WHERE answers.questionnaireID = %s AND answers.qID = %s",(questionnaireID,questionID)) 
+        results = cursor.fetchall()
+
+        data ={
+                "questionnaireID" : questionnaireID,
+                "session" : questionID,
+                "answers": [
+                ]
+            }
+
+        for result in range(len(results)):
+
+            data["answers"].append({"session" : results[result][0],"ans" : results[result][1]})
+
     else:
+        data = {'empty' : 'empty'}
         print("not connected")
 
-    return render_template("admin.html")
+    json_data = json.dumps(data)
+
+    return render_template("get_question_answers.html",
+                            json_data = json_data)
 
 #---------------------------------------------------------------------------------------------------------------
 #Create Custom Error Pages
