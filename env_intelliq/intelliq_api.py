@@ -1,3 +1,6 @@
+#---------------------------------------------------------------------------------------------------------------
+#Import zone
+#---------------------------------------------------------------------------------------------------------------
 #pip install flask
 from flask import Flask, render_template, abort, flash, request, redirect, url_for
 from werkzeug.exceptions import HTTPException
@@ -36,14 +39,15 @@ import string
 #Lancer l'application flask:
 #flask run
 #flask --app api run
-#-----------------------------------------------------------------------------
 
-#Connect to database
+#---------------------------------------------------------------------------------------------------------------
+#Connection to the database and creation of the cursor
+#---------------------------------------------------------------------------------------------------------------
 try:
     connection = mysql.connector.connect(host='localhost',
                                         database='intelliq_db', #j=intelliqdb    r=intelliq_db
                                         user='root',
-                                        password='123456') #j=root     r=123456
+                                        password='root') #j=root     r=123456
     if connection.is_connected():
         db_Info = connection.get_server_info()
         print("Connected to MySQL Server version ", db_Info)
@@ -54,9 +58,9 @@ try:
 except Error as e:
     print("Error while connecting to MySQL", e)
 
-#-----------------------------------------------------------------------------
-#Setting up flask app
-
+#---------------------------------------------------------------------------------------------------------------
+#Flask app parameteres
+#---------------------------------------------------------------------------------------------------------------
 UPLOAD_FOLDER = 'uploaded_files'
 ALLOWED_EXTENSIONS = {'json'}
 
@@ -77,15 +81,16 @@ app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
     #raise no_data() #force the error 402
     #raise success() #force the error 200
     return render_template("welcome.html")'''
-#-----------------------------------------------------------------------------
 
+#---------------------------------------------------------------------------------------------------------------
+#First page with registering functions
+#---------------------------------------------------------------------------------------------------------------
 def generate_random_string(string_length=4):
     """Generate a random string of fixed length """
     letters = string.ascii_letters.upper()
     return ''.join(random.choices(letters, k=string_length))
 
 #User
-#Create a Form Class
 class NamerForm(FlaskForm):
     name = StringField("What is your username ?", validators=[DataRequired()])
     submit = SubmitField("Submit")
@@ -98,7 +103,6 @@ class NamerForm(FlaskForm):
 def user():
     global actualUser
     global sessionID
-    
     name = None
     form = NamerForm()
     #Validate
@@ -110,24 +114,17 @@ def user():
         exist = 0
         cursor.execute("SELECT username,userID FROM users")
         for username in cursor:
-            
             if name==username[0] and exist==0:
                 flash("This username is already used by someone else")
                 exist=1
             else:
                 flash("This username is valide")
-
-            
           
         if exist!=1:
             cursor.execute("INSERT INTO users(username) VALUES(%s)",actualUsername)
             connection.commit() #make sure data is committed to the database
 
-        #take the value of userID in function of the usernames
-        #cursor.execute("SELECT userID FROM users where username = %s", actualUsername)
-
         actualUser = actualUsername
-
         sessionID = generate_random_string()
 
     return render_template("login.html",
@@ -137,6 +134,7 @@ def user():
 
 #---------------------------------------------------------------------------------------------------------------
 #route for the adminPage
+#---------------------------------------------------------------------------------------------------------------
 @app.route('/intelliq_api/admin')
 def admin():
     if (actualUser[0] == "raphael") or (actualUser[0] == "jules"):
@@ -146,10 +144,8 @@ def admin():
 
 
 #---------------------------------------------------------------------------------------------------------------
-#route for the healthcheck:
-# a JSON object: {"status":"OK", "dbconnection":[connection string]}
-# is returned, otherwise {"status":"failed", "dbconnection":[connection string]} is returned. The
-# connection string contains the necessary information required for the DB of your choice.
+# ADMIN ENDPOINT healtcheck (check database connection)
+#---------------------------------------------------------------------------------------------------------------
 @app.route('/intelliq_api/admin/healthcheck', methods=['GET'])
 #Healthcheck
 def healthcheck():
@@ -180,6 +176,8 @@ def healthcheck():
     else:
         abort(401)
 
+#---------------------------------------------------------------------------------------------------------------
+# ADMIN ENDPOINT to reset all data of the software (database and clear uploaded_files folder)
 #---------------------------------------------------------------------------------------------------------------
 
 @app.route('/intelliq_api/admin/resetall')
@@ -232,7 +230,8 @@ def reset_all():
         abort(401)
 
 #---------------------------------------------------------------------------------------------------------------
-#admin endpoint  resetq
+# ADMIN ENDPOINT resetq to reset all questions of a questionnaire
+#---------------------------------------------------------------------------------------------------------------
 @app.route('/intelliq_api/admin/resetq/<questionnaireID>',methods=['GET','POST'])
 def resetq(questionnaireID):
     #save the questions to delete in questionnaires
@@ -252,7 +251,7 @@ def resetq(questionnaireID):
     return render_template("admin.html")
 
 #---------------------------------------------------------------------------------------------------------------
-# Admnistrative endpoint questionnaire_upd
+# ADMIN ENDPOINT questionnaire_upd
 #---------------------------------------------------------------------------------------------------------------
 class UploadFileForm(FlaskForm):
     file = FileField("File",validators=[InputRequired()])
@@ -329,9 +328,8 @@ def upload_file():
         abort(401)
 
 #---------------------------------------------------------------------------------------------------------------
-
-#System Operating Endpoint of the a 
-
+# Endpoint A to have infomation of a questionnaire
+#---------------------------------------------------------------------------------------------------------------
 @app.route('/intelliq_api/questionnaire/<questionnaireID>', methods=['GET'])
 def questionnaire(questionnaireID):
 
@@ -345,9 +343,8 @@ def questionnaire(questionnaireID):
             json_data = json_data)
 
 #---------------------------------------------------------------------------------------------------------------
-
-#System Operating Endpoint of the b
-
+# Endpoint B to have all the informations of a question of a questionnaire
+#---------------------------------------------------------------------------------------------------------------
 @app.route('/intelliq_api/question/<questionnaireID>/<questionID>', methods=['GET'])
 def question(questionnaireID, questionID):
 
@@ -367,8 +364,8 @@ def question(questionnaireID, questionID):
             json_data = json_data)
 
 #---------------------------------------------------------------------------------------------------------------
-
-#System Operating Endpoint of the c
+# Endpoint C to save an answer in the database
+#---------------------------------------------------------------------------------------------------------------
 @app.route('/intelliq_api/doanswer/<questionnaireID>/<questionID>/<session>/<optionID>',methods=['GET','POST'])
 def doanswer(questionnaireID, questionID, session, optionID):
     message = " "
@@ -392,8 +389,8 @@ def doanswer(questionnaireID, questionID, session, optionID):
 
 
 #---------------------------------------------------------------------------------------------------------------
-#d. {baseURL}/getsessionanswers/:questionnaireID/:session
-# give all the answer given to all questions of questionnaireID during the session
+# Endpoint D to have all the answers of a questionnaire during a session?
+#---------------------------------------------------------------------------------------------------------------
 
 @app.route('/intelliq_api/getsessionanswers/<questionnaireID>/<session>',methods=['GET'])
 def get_session_answers(questionnaireID,session):
@@ -423,7 +420,8 @@ def get_session_answers(questionnaireID,session):
                             json_data = json_data)
 
 #---------------------------------------------------------------------------------------------------------------
-#e. {baseURL}/getquestionanswers/:questionnaireID/:questionID
+# Endpoint E to have the given answer of a question from a questionnaire
+#---------------------------------------------------------------------------------------------------------------
 @app.route('/intelliq_api/getquestionanswers/<questionnaireID>/<questionID>',methods=['GET'])
 def get_question_answers(questionnaireID,questionID):
 
@@ -455,6 +453,7 @@ def get_question_answers(questionnaireID,questionID):
 
 #---------------------------------------------------------------------------------------------------------------
 #Create Custom Error Pages
+#---------------------------------------------------------------------------------------------------------------
 #back-end error
 @app.errorhandler(500)#: impossible to run with ':'
 def internal_server(e):
