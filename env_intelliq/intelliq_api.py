@@ -217,6 +217,9 @@ def reset_all():
     else:
         abort(401)
 
+#---------------------------------------------------------------------------------------------------------------
+#admin endpoint  resetq
+@app.route('/intelliq_api/admin/resetq/<questionnaireID>',methods=['POST'])
 
 #---------------------------------------------------------------------------------------------------------------
 #test
@@ -367,6 +370,20 @@ def get_session_answers(questionnaireID,session):
         print ("Connected!")
         print(questionnaireID,session)
         cursor.execute("SELECT * FROM answers WHERE answers.questionnaireID = %s AND answers.session = %s",(questionnaireID,session)) 
+        result = cursor.fetchall()
+        print(result)
+    else:
+        print("not connected")
+
+    return render_template("admin.html")
+
+#---------------------------------------------------------------------------------------------------------------
+#e. {baseURL}/getquestionanswers/:questionnaireID/:questionID
+@app.route('/intelliq_api/getquestionanswers/<questionnaireID>/<questionID>',methods=['GET'])
+def get_question_answers(questionnaireID,questionID):
+    if connection.is_connected():
+        print ("Connected!")
+        cursor.execute("SELECT * FROM answers WHERE answers.questionnaireID = %s AND answers.qID = %s",(questionnaireID,questionID)) 
         result = cursor.fetchall()
         print(result)
     else:
