@@ -219,7 +219,23 @@ def reset_all():
 
 #---------------------------------------------------------------------------------------------------------------
 #admin endpoint  resetq
-@app.route('/intelliq_api/admin/resetq/<questionnaireID>',methods=['POST'])
+@app.route('/intelliq_api/admin/resetq/<questionnaireID>',methods=['GET','POST'])
+def resetq(questionnaireID):
+    #save the questions to delete in questionnaires
+    cursor.execute("SELECT qID FROM questionnaires_questions WHERE questionnaires_questions.questionnaireID = %s",[questionnaireID])
+    toDelete = cursor.fetchall()
+    print(toDelete)
+#delete junction table questionnaires_questions
+    cursor.execute("DELETE FROM questionnaires_questions WHERE questionnaireID=%s", (questionnaireID,))
+    connection.commit()
+
+#delete datas from questionnaire where questionnaireID is good
+    # print("toDelete:",len(toDelete))
+    # for i in range (len(toDelete)):
+    #     cursor.execute("DELETE FROM questions WHERE qID=%s", (toDelete[i]))
+    cursor.execute("DELETE FROM questions WHERE qID=%s",(toDelete[0]))
+    connection.commit()
+    return render_template("admin.html")
 
 #---------------------------------------------------------------------------------------------------------------
 #test
