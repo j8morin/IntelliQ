@@ -7,6 +7,16 @@ Version control:
 26/11 -Foreign key V
 */
 
+-- Active: 1673970259568@@127.0.0.1@3306@intelliq_db
+/* 
+This is what you can put in you're "database.sql" query to initialize the model we imagine.
+Version control:
+25/11 -Creation of different table with what we understand from the subject V
+      -Insert data into this tables and test the JOIN feature (for the list types) V
+      -Foreign key test (to improve) X
+26/11 -Foreign key V
+*/
+
 USE intelliq_db;
 
 /*------------------------------------------------------------------------
@@ -55,7 +65,7 @@ CREATE TABLE questionnaires_keywords (
 
 #junction table between questionaires and questions
 CREATE TABLE questionnaires_questions (
-    questionnaireID CHAR(255) NOT NULL,
+    questionnaireID CHAR(10) NOT NULL,
     qID CHAR(10) NOT NULL,
     PRIMARY KEY (questionnaireID, qID),
     FOREIGN KEY (questionnaireID) REFERENCES questionnaires(questionnaireID),
