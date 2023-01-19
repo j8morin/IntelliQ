@@ -70,6 +70,19 @@ CREATE TABLE questions_options (
     FOREIGN KEY (qID) REFERENCES questions(qID),
     FOREIGN KEY (optID) REFERENCES options(optID)
 );
+
+#answers
+CREATE TABLE answers (
+    questionnaireID CHAR(10) NOT NULL,
+    session CHAR(4) NOT NULL,
+    qID CHAR(10) NOT NULL,
+    ans CHAR(10) NOT NULL,
+    PRIMARY KEY (questionnaireID,session,qID,ans),
+    FOREIGN KEY (questionnaireID) REFERENCES questionnaires(questionnaireID),
+    FOREIGN KEY (qID) REFERENCES questions(qID),
+    FOREIGN KEY (ans) REFERENCES options(optID)
+);
+
 /*------------------------------------------------------------------------
 TEST ZONE (query)
 ------------------------------------------------------------------------*/
@@ -91,4 +104,15 @@ SELECT DISTINCT questionnaires.questionnaireID, keywords.keyword
 FROM questionnaires_keywords
 JOIN questionnaires on questionnaires_keywords.`questionnaireID` = questionnaires.questionnaireID
 JOIN keywords on questionnaires_keywords.keyword = keywords.keyword;
+
+
+
+INSERT INTO answers (questionnaireID,session,qID,ans)
+VALUE ('QQ000','ABCD','P00','P00TXT');
+
+INSERT INTO answers (questionnaireID,session,qID,ans)
+VALUE ('QQ000','ABCD','P01','P01A1');
+
+SELECT * FROM answers
+WHERE answers.questionnaireID='QQ000' AND answers.session='ABCD';
 
