@@ -66,7 +66,7 @@ ALLOWED_EXTENSIONS = {'json'}
 
 actualUser = " "
 sessionID = " "
-nameTable = ["users", "questionnaires", "questions", "options", "keywords", "questionnaires_keywords", "questionnaires_questions", "questions_options", "answers"]
+nameTable = ["users", "questionnaires_keywords","questionnaires_questions","questions_options", "questionnaires", "questions", "options", "keywords"  , "answers"]
 
 #Create a Flask instance
 app= Flask(__name__)
@@ -189,7 +189,7 @@ def reset_all():
         connection = mysql.connector.connect(host='localhost',
                                             database='intelliq_db',
                                             user='root',
-                                            password='123456')
+                                            password='root')
         if connection.is_connected():
             cursor = connection.cursor()
 
@@ -230,24 +230,15 @@ def reset_all():
         abort(401)
 
 #---------------------------------------------------------------------------------------------------------------
-# ADMIN ENDPOINT resetq to reset all questions of a questionnaire
+# ADMIN ENDPOINT resetq to reset all answers of a questionnaire
 #---------------------------------------------------------------------------------------------------------------
 @app.route('/intelliq_api/admin/resetq/<questionnaireID>',methods=['GET','POST'])
 def resetq(questionnaireID):
-    #save the questions to delete in questionnaires
-    cursor.execute("SELECT qID FROM questionnaires_questions WHERE questionnaires_questions.questionnaireID = %s",[questionnaireID])
-    toDelete = cursor.fetchall()
-    print(toDelete)
+
 #delete junction table questionnaires_questions
-    cursor.execute("DELETE FROM questionnaires_questions WHERE questionnaireID=%s", (questionnaireID,))
+    cursor.execute("DELETE FROM answers WHERE questionnaireID=%s", (questionnaireID,))
     connection.commit()
 
-#delete datas from questionnaire where questionnaireID is good
-    # print("toDelete:",len(toDelete))
-    # for i in range (len(toDelete)):
-    #     cursor.execute("DELETE FROM questions WHERE qID=%s", (toDelete[i]))
-    cursor.execute("DELETE FROM questions WHERE qID=%s",(toDelete[0]))
-    connection.commit()
     return render_template("admin.html")
 
 #---------------------------------------------------------------------------------------------------------------
