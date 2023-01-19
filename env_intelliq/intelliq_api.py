@@ -20,6 +20,9 @@ import json
 import os
 import glob #get file in a folder
 
+import random
+import string
+
 
 #-----------------------------------------------------------------------------
 #Commande utile dans le powerShell:
@@ -40,7 +43,7 @@ try:
     connection = mysql.connector.connect(host='localhost',
                                         database='intelliq_db', #j=intelliqdb    r=intelliq_db
                                         user='root',
-                                        password='root') #j=root     r=123456
+                                        password='123456') #j=root     r=123456
     if connection.is_connected():
         db_Info = connection.get_server_info()
         print("Connected to MySQL Server version ", db_Info)
@@ -58,7 +61,8 @@ UPLOAD_FOLDER = 'uploaded_files'
 ALLOWED_EXTENSIONS = {'json'}
 
 actualUser = " "
-nameTable = ["users", "questionnaires", "questions", "options", "keywords", "questionnaires_keywords", "questionnaires_questions", "questions_options" ]
+sessionID = " "
+nameTable = ["users", "questionnaires", "questions", "options", "keywords", "questionnaires_keywords", "questionnaires_questions", "questions_options", "answers"]
 
 #Create a Flask instance
 app= Flask(__name__)
@@ -74,6 +78,12 @@ app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
     #raise success() #force the error 200
     return render_template("welcome.html")'''
 #-----------------------------------------------------------------------------
+
+def generate_random_string(string_length=4):
+    """Generate a random string of fixed length """
+    letters = string.ascii_letters.upper()
+    return ''.join(random.choices(letters, k=string_length))
+
 #User
 #Create a Form Class
 class NamerForm(FlaskForm):
@@ -87,6 +97,7 @@ class NamerForm(FlaskForm):
 @app.route('/intelliq_api', methods=['GET', 'POST'])
 def user():
     global actualUser
+    global sessionID
     
     name = None
     form = NamerForm()
@@ -117,9 +128,12 @@ def user():
 
         actualUser = actualUsername
 
+        sessionID = generate_random_string()
+
     return render_template("login.html",
         name = name,
-        form = form)
+        form = form,
+        sessionID = sessionID)
 
 #---------------------------------------------------------------------------------------------------------------
 #route for the adminPage
@@ -219,15 +233,6 @@ def reset_all():
 
 
 #---------------------------------------------------------------------------------------------------------------
-#test
-@app.route('/test',methods=['GET', 'POST'])
-def test():
-    with open('env_intelliq/questionnaire01.json','r') as f:
-            questionnaire_data = json.load(f)
-        # do something with questionnaire_data
-    return render_template("test.html",data = questionnaire_data)
-
-#---------------------------------------------------------------------------------------------------------------
 # Admnistrative endpoint questionnaire_upd
 #---------------------------------------------------------------------------------------------------------------
 class UploadFileForm(FlaskForm):
@@ -285,7 +290,6 @@ def add_questionnaire_to_db(filename):
         connection.commit()
 
 @app.route('/intelliq_api/admin/questionnaire_upd',methods=['GET', 'POST'])
-
 #Upload the selected file in the questionnaire repository
 def upload_file():
     if (actualUser[0] == "raphael") or (actualUser[0] == "jules"):
@@ -346,15 +350,26 @@ def question(questionnaireID, questionID):
 #---------------------------------------------------------------------------------------------------------------
 
 #System Operating Endpoint of the c
-@app.route('/intelliq_api/doanswer/<questionnaireID>/<questionID>/<session>/<optionID>',methods=['POST'])
+@app.route('/intelliq_api/doanswer/<questionnaireID>/<questionID>/<session>/<optionID>',methods=['GET','POST'])
 def doanswer(questionnaireID, questionID, session, optionID):
+    message = " "
+
+    cursor.execute("SELECT * FROM answers"
+                    " WHERE answers.questionnaireID = %s and answers.session = %s and answers.qID = %s and answers.ans = %s",              
+                    (questionnaireID, session, questionID, optionID)
+                    )
+    result = cursor.fetchone()
+    if result == None:
+        cursor.execute("INSERT INTO answers(questionnaireID,session,qID,ans) VALUES(%s,%s,%s,%s)",(questionnaireID, session, questionID, optionID))
+        message = "This answer entered in the database"
+    else:
+        message = "This answer is already in the database"
+    connection.commit()
+
 
 
     return render_template("doanswer.html",
-            questionnaireID = questionnaireID,
-            questionID = questionID,
-            session = session,
-            optionID = optionID)
+            message = message)
 
 
 #---------------------------------------------------------------------------------------------------------------
