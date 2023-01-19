@@ -358,6 +358,23 @@ def doanswer(questionnaireID, questionID, session, optionID):
 
 
 #---------------------------------------------------------------------------------------------------------------
+#d. {baseURL}/getsessionanswers/:questionnaireID/:session
+# give all the answer given to all questions of questionnaireID during the session
+
+@app.route('/intelliq_api/getsessionanswers/<questionnaireID>/<session>',methods=['GET'])
+def get_session_answers(questionnaireID,session):
+    if connection.is_connected():
+        print ("Connected!")
+        print(questionnaireID,session)
+        cursor.execute("SELECT * FROM answers WHERE answers.questionnaireID = %s AND answers.session = %s",(questionnaireID,session)) 
+        result = cursor.fetchall()
+        print(result)
+    else:
+        print("not connected")
+
+    return render_template("admin.html")
+
+#---------------------------------------------------------------------------------------------------------------
 #Create Custom Error Pages
 #back-end error
 @app.errorhandler(500)#: impossible to run with ':'
