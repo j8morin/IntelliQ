@@ -96,15 +96,6 @@ CREATE TABLE answers (
 /*------------------------------------------------------------------------
 TEST ZONE (query)
 ------------------------------------------------------------------------*/
-INSERT INTO questionnaires (`questionnaireID`,`questionnaireTitle`)
-VALUE ('QQ000','My first questionnaire');
-
-INSERT INTO keywords (keyword)
-VALUEs ('first'),('questionnaire');
-
-INSERT INTO questionnaires_keywords (`questionnaireID`,keyword)
-VALUES ('QQ000','first'),('QQ000','questionnaire');
-
 SELECT * FROM questionnaires WHERE questionnaireID = 'QQ000';
 SELECT * FROM keywords WHERE keyword = 'first' OR keyword = 'questionnaire';
 
@@ -115,8 +106,7 @@ FROM questionnaires_keywords
 JOIN questionnaires on questionnaires_keywords.`questionnaireID` = questionnaires.questionnaireID
 JOIN keywords on questionnaires_keywords.keyword = keywords.keyword;
 
-
-
+/* This functions needs to be run before testing answers endpoints.*/
 INSERT INTO answers (questionnaireID,session,qID,ans)
 VALUE ('QQ000','ABCD','P00','P00TXT');
 

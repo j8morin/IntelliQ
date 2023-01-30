@@ -183,16 +183,8 @@ def healthcheck():
 @app.route('/intelliq_api/admin/resetall')
 def reset_all():
     if (actualUser[0] == "raphael") or (actualUser[0] == "jules"):
-
         result = 0
-        
-        connection = mysql.connector.connect(host='localhost',
-                                            database='intelliq_db',
-                                            user='root',
-                                            password='root')
         if connection.is_connected():
-            cursor = connection.cursor()
-
             #make all the tables empty
             for table_name in nameTable:
                 query = "DELETE FROM {}".format(table_name)
@@ -416,9 +408,7 @@ def get_session_answers(questionnaireID,session):
 @app.route('/intelliq_api/getquestionanswers/<questionnaireID>/<questionID>',methods=['GET'])
 def get_question_answers(questionnaireID,questionID):
 
-
     if connection.is_connected():
-        print ("Connected!")
         cursor.execute("SELECT session,ans FROM answers WHERE answers.questionnaireID = %s AND answers.qID = %s",(questionnaireID,questionID)) 
         results = cursor.fetchall()
 
