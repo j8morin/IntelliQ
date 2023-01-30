@@ -2,7 +2,17 @@
 IntelliQ project from Software engineering Semester 7 course in Electronical and Computer Engineering School, NTUA.  
 Back-end python API and Database model are available on this git.  
 
-Authors: Raphaël Dussauze, Jules Morin
+### Components
+All components can be found in env_intelliq folder:  
+- *templates* folder contains all HTML simple templates we created fo every endpoints.  
+- *uploaded_files* is the folder where uploaded questionnaires are localy stored.  
+- *intelliq_api.py* contains all our python endpoints functions.  
+- *QQ000.json* is a questionnaire file who can be used to test the questionnaire upload endpoint.  
+- *setup_database.txt* containes all the code you should put in your database QUERY to setup our database model. 
+
+### Authors
+- Raphaël Dussauze
+- Jules Morin
 
 ## Installation
 
