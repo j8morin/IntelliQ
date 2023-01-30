@@ -231,7 +231,20 @@ def resetq(questionnaireID):
     cursor.execute("DELETE FROM answers WHERE questionnaireID=%s", (questionnaireID,))
     connection.commit()
 
-    return render_template("admin.html")
+    #Check if everything went good
+    cursor.execute("SELECT questionnaireID from answers")
+    result = cursor.fetchall()
+    print("resetq:" ,result)
+    data = {"status" : "OK"}
+    for qID in result:
+        if qID[0]==questionnaireID:
+            data = {"status" : "Failed",
+                "reason" : "An error occured, not every answers of the given questionnaire where deleted"}
+            
+    json_data = json.dumps(data)
+
+    return render_template("resetq.html",
+                            json_data = json_data)
 
 #---------------------------------------------------------------------------------------------------------------
 # ADMIN ENDPOINT questionnaire_upd
@@ -242,6 +255,7 @@ class UploadFileForm(FlaskForm):
 
 #This function read a questionnaire.json file from the questionnaire repository to add everything to the database
 def add_questionnaire_to_db(filename):
+    isExist=0
     with open(filename,'r') as json_file:
             data = json.load(json_file)
     if connection.is_connected():
@@ -249,46 +263,56 @@ def add_questionnaire_to_db(filename):
         questionnaireID = data['questionnaireID']
         questionnaireTitle = data['questionnaireTitle']
         questions = data['questions']
-        cursor.execute("INSERT INTO questionnaires(questionnaireID,questionnaireTitle) VALUES(%s,%s)",(questionnaireID,questionnaireTitle))
 
-        #keywords:
-        keywords = data['keywords']
-        for keyword in keywords:
-            #insert into keywords table
-            cursor.execute("INSERT INTO keywords(keyword) VALUES(%s)",([keyword]))
-            #insert into junction table
-            cursor.execute("INSERT INTO questionnaires_keywords (questionnaireID,keyword)"
-                            "VALUES (%s,%s)",(questionnaireID,keyword))
+        #Security to check if the questionnaire is already in database
+        cursor.execute("SELECT questionnaireID FROM questionnaires")
+        existingQuestionnaires = cursor.fetchall()
 
-        #questions:
-        questions = data['questions']
-        for question in questions:
-            qID = question['qID']
-            qtext = question['qtext']
-            required = question['required']
-            type = question['type']
-            #insert into questions table
-            cursor.execute("INSERT INTO questions(qID,qtext,required,type)"
-                            "VALUES (%s,%s,%s,%s)",(qID,qtext,required,type))
-            #insert into junction table
-            cursor.execute("INSERT INTO questionnaires_questions (questionnaireID,qID)"
-                            "VALUES (%s,%s)",(questionnaireID,qID))
+        for questionnaire in existingQuestionnaires:
+                if questionnaire[0] == questionnaireID:
+                    isExist = 1
+        
+        if isExist == 0:
+            cursor.execute("INSERT INTO questionnaires(questionnaireID,questionnaireTitle) VALUES(%s,%s)",(questionnaireID,questionnaireTitle))
 
-            #options
-            options = question['options']
-            for option in options:
-                optID = option['optID']
-                opttxt = option['opttxt']
-                nextqID = option['nextqID']
-                #insert into options table
-                cursor.execute("INSERT INTO options(optID,opttxt,nextqID)"
-                                "VALUES (%s,%s,%s)",(optID,opttxt,nextqID))
+            #keywords:
+            keywords = data['keywords']
+            for keyword in keywords:
+                #insert into keywords table
+                cursor.execute("INSERT INTO keywords(keyword) VALUES(%s)",([keyword]))
                 #insert into junction table
-                cursor.execute("INSERT INTO questions_options (qID,optID)"
-                                "VALUES (%s,%s)",(qID,optID))
-            
-        #connection
-        connection.commit()
+                cursor.execute("INSERT INTO questionnaires_keywords (questionnaireID,keyword)"
+                                "VALUES (%s,%s)",(questionnaireID,keyword))
+
+            #questions:
+            questions = data['questions']
+            for question in questions:
+                qID = question['qID']
+                qtext = question['qtext']
+                required = question['required']
+                type = question['type']
+                #insert into questions table
+                cursor.execute("INSERT INTO questions(qID,qtext,required,type)"
+                                "VALUES (%s,%s,%s,%s)",(qID,qtext,required,type))
+                #insert into junction table
+                cursor.execute("INSERT INTO questionnaires_questions (questionnaireID,qID)"
+                                "VALUES (%s,%s)",(questionnaireID,qID))
+
+                #options
+                options = question['options']
+                for option in options:
+                    optID = option['optID']
+                    opttxt = option['opttxt']
+                    nextqID = option['nextqID']
+                    #insert into options table
+                    cursor.execute("INSERT INTO options(optID,opttxt,nextqID)"
+                                    "VALUES (%s,%s,%s)",(optID,opttxt,nextqID))
+                    #insert into junction table
+                    cursor.execute("INSERT INTO questions_options (qID,optID)"
+                                    "VALUES (%s,%s)",(qID,optID))
+                
+            #connection
+            connection.commit()
 
 @app.route('/intelliq_api/admin/questionnaire_upd',methods=['GET', 'POST'])
 #Upload the selected file in the questionnaire repository
@@ -301,8 +325,8 @@ def upload_file():
             file.save(os.path.join(os.path.abspath(os.path.dirname(__file__)),app.config['UPLOAD_FOLDER'],secure_filename(file.filename))) #Save the file
             #Open the file to fill the database
             filename="env_intelliq/uploaded_files/"+file.filename
+
             add_questionnaire_to_db(filename)
-        
             check = "File has been uploaded"
         else:
             check = ""
