@@ -46,8 +46,8 @@ import string
 try:
     connection = mysql.connector.connect(host='localhost',
                                         database='intelliq_db', #j=intelliqdb    r=intelliq_db
-                                        user='root',
-                                        password='root') #j=root     r=123456
+                                        user='YourUsername',
+                                        password='YourPassword') #j=root     r=123456
     if connection.is_connected():
         db_Info = connection.get_server_info()
         print("Connected to MySQL Server version ", db_Info)
@@ -154,8 +154,8 @@ def healthcheck():
         try:
             connection = mysql.connector.connect(host='localhost',
                                                 database='intelliq_db',
-                                                user='root',
-                                                password='123456')
+                                                user='YourUsername',
+                                                password='YourPassword')
             if connection.is_connected():
                 db_Info = connection.get_server_info()
                 data = {'status':'OK','dbconnection':db_Info}
